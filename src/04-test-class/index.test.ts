@@ -1,21 +1,11 @@
 import {
   getBankAccount,
   TransferFailedError,
-  // SynchronizationFailedError,
+  SynchronizationFailedError,
   InsufficientFundsError,
-  // BankAccount,
-} from '.';
-import * as lodash from 'lodash';
-
-jest.mock('lodash', () => ({
-  random: jest.fn(),
-}));
+} from './index';
 
 describe('BankAccount', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
   test('should create account with initial balance', () => {
     const account = getBankAccount(100);
     expect(account.getBalance()).toBe(100);
@@ -61,37 +51,28 @@ describe('BankAccount', () => {
     expect(to.getBalance()).toBe(125);
   });
 
-  test('fetchBalance should return number in case if request did not failed', async () => {
-    (lodash.random as jest.Mock)
-      .mockReturnValueOnce(42)
-      .mockReturnValueOnce(1);
-
+  test('fetchBalance should return number in case if request did not fail', async () => {
     const account = getBankAccount(0);
+    account.fetchBalance = jest.fn().mockResolvedValue(42);
     const balance = await account.fetchBalance();
     expect(balance).toBe(42);
   });
 
   test('should set new balance if fetchBalance returned number', async () => {
-    (lodash.random as jest.Mock)
-      .mockReturnValueOnce(88)
-      .mockReturnValueOnce(1);
-
     const account = getBankAccount(0);
+    account.fetchBalance = jest.fn().mockResolvedValue(88);
     await account.synchronizeBalance();
     expect(account.getBalance()).toBe(88);
   });
 
-  /* test('should throw SynchronizationFailedError if fetchBalance returned null', async () => {
-    (lodash.random as jest.Mock)
-      .mockReturnValueOnce(77)
-      .mockReturnValueOnce(0);
-
+  test('should throw SynchronizationFailedError if fetchBalance returned null', async () => {
     const account = getBankAccount(0);
+    account.fetchBalance = jest.fn().mockResolvedValue(null);
     await expect(account.synchronizeBalance()).rejects.toThrow(
       SynchronizationFailedError,
     );
     await expect(account.synchronizeBalance()).rejects.toThrow(
       'Synchronization failed',
     );
-  }); */
+  });
 });
